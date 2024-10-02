@@ -1,0 +1,117 @@
+objectives 
+1. use external library Flask SQLALCHEMY TO Simplify tasks 
+manage database tabes and schemsa without writing SQL code
+use the flas shell eith falks sqlalchemy to create, read, update and delete records in a sql database.
+
+
+THE FLASK SHELL 
+how to persist data of an instance of a class.
+remember that we do not save pythons objects into the database but we save the objects attributes as a new rw in a table.
+
+we can interact wiht code in python shell or ipdb session, but working with a web framweok presents a bit of an issue the application is not running yet.
+thankfully flask comes equipped with an interactive shell that runs a developmwnt version of an application. 
+inside these shell we can interact with models, context, and the database.
+to navigate into the flask shell we run the following command 
+    1. flask shell 
+
+    example 1. 
+        lets import the necessary dn databse object and the pet model.
+         Use the following code 
+            from models import db, pet
+        
+
+        2. add() and commit()
+            -lets add a row to the pets table for a dog names 'Fido'
+            the steps to add a row are as follows:
+
+                1. create new instance of the model pet - 
+                     code 
+                        pet1 = Pet(name = 'Fido', species='Dog')
+
+                        however this has not been persisted in the database.
+                        when you run pet1.id in the flask shell it gives nothing
+                        the pet id will not ba assigned until the pet instance has been added to the databse.
+
+
+                2.  add the Pet instance to the current database session
+                    - persisting a intance of a class to the databse requires a database session, which is an object that manages databse transactions.
+                    - a transaction is a sequence of SQL statments that are processed as an atomic unit.
+                    - this means that either SQL statements are either applied or they are all udone together.This is important if statements that occur in 
+                    a sequence depned on previous statements executing properly.
+
+                    the workflow of a transaction is as follows:
+                        
+                        transaction begins
+                                |
+                                |
+                        database state recorded.
+                                |
+                                |
+                        SQL statement ( X3)
+                                |
+                                |
+                        Transaction committed
+
+                if any of the sql statments fail to execute propetrly, the databse will be rolled back to the state recorded at the biginning of the transaction and the 
+                process will end returning an error message.
+                acommited transaction ensures all statements were executes in sequence and to completion.
+
+            Flask-SQLAlchemy provides the db.session object through which we can manage changes to the database such as table row
+            insertions, updates and deletions.
+
+            the following is how we will add our new class instance into our database
+                    code:
+                        db.session.add(pet1) - this method call will issue an SQL INSERT statement but the id attriute of the Pet instance in the python 
+                        app;lication is still undefined becasue we have not yet commited the current transaction.
+                
+                3, commit the transaction and apply the changes to the database.
+                         after runnin the db.session.add(pet1) the id of the new isntance that is added in the database is still undefined until we commit the new isntance into 
+                         the database.
+                             code 
+                                    db.session.commit()
+
+                                    after this check the pets table to confirm that we have the new pet instance in the table in the database.
+        
+        3. Query
+            we can query all the rows in a table associated with the Pet model as shown
+                 code
+                        Pet.query.all()
+
+                    question 
+                         how did the pet class ger the query attribute?
+                            it inherits it from the db.Model.
+                            the all() fuction says to retrun every row from the query reuslt
+
+                            if we want to return the first row retuned from a query use the first() function
+        
+        4. Filter()
+             we can filter using the filter function.
+             the fuction takes a boolean expression as an argument that is evalueated agaisnt each model instance returned fromt he query.
+             if we want to filter each pet by species :
+                    code :
+                             Pet.query.filter(pet.species == 'Cat').all()
+
+            if we want pets whose name starts with an F:
+                code:
+                         Pet.query.filter(Pet.name.startswitch('F')).all()
+
+        5. Filter_by()
+            the filter fucntion is powerful in htat yu can pass any boolean expression to test on a model instance.
+            However we often want to just look for rows having a particular value in a column.the filter_by() mwthod is useful for htat 
+            the criteria passed as a fuciton argument takes a single equal sign.
+
+                code 
+                        Pet.query.filter_by(species = 'cat').all()
+
+                        by id 
+                        Pet.query.filter_by(id= 1).first()
+        6. get()
+            if you want  to acces a certain row by its primary key use db.session.get(Model, id)
+            it will retrun the row with the given primary key., or None if it doesnt exist.
+            the mai adavatage is caching
+            SQLAlchemy session maitainan identoty map, so if the specified Id is already is the session, it will return 
+            that isntacne without hitting the database again.
+        7. order_by()
+             the order_by() method allows us to sort by comulm
+             example 
+                 Pet.query.order_by(species)
